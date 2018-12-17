@@ -23,6 +23,7 @@ Sub recordTickerStats(sheet As Worksheet)
     Dim yearlyChange As Double
     Dim startingPrice As Double
     Dim percentChange As Double
+    Dim lastTickerRow As Long
 
     Call setUpStatsHeaders(sheet)
 
@@ -33,10 +34,11 @@ Sub recordTickerStats(sheet As Worksheet)
     Do While ticker <> ""
         sheet.Cells(tickerIndex, tickerColumn()).Value = ticker
         ' Record volume
-        sheet.Cells(tickerIndex, totalVolumeColumn()).Value = getTotalVolume(ticker, sheet.Range("A:A"), sheet)
+        lastTickerRow = getLastRowOfTicker(ticker, sheet.Range("A:A"))
+        sheet.Cells(tickerIndex, totalVolumeColumn()).Value = getTotalVolume(ticker, sheet.Range("A:A"), sheet, lastTickerRow)
         
         ' Record yearly change
-        yearlyChange = getYearlyChange(ticker, sheet.Range("A:A"), sheet)
+        yearlyChange = getYearlyChange(ticker, sheet.Range("A:A"), sheet, lastTickerRow)
         sheet.Cells(tickerIndex, yearlyChangeColumn()).Value = yearlyChange
         ' Yearly change formatting
         If (yearlyChange >= 0) Then
@@ -56,7 +58,7 @@ Sub recordTickerStats(sheet As Worksheet)
         sheet.Range("K:K").NumberFormat = "0.00%"
 
         ' Get next ticker and increment recorded stats index
-        ticker = getNextTicker(ticker, sheet.Range("A:A"))
+        ticker = getNextTicker(ticker, sheet.Range("A:A"), lastTickerRow)
         tickerIndex = tickerIndex + 1
     Loop
 End Sub
@@ -189,11 +191,8 @@ Function totalVolumeColumn()
     totalVolumeColumn = 12
 End Function
 
-Function getNextTicker(currentTicker As String, column As Range)
-    Dim lastRow As Long
-    
-    lastRow = getLastRowOfTicker(currentTicker, column)
-    getNextTicker = column.Cells(lastRow + 1, 1).Value
+Function getNextTicker(currentTicker As String, column As Range, lastTickerRow As Long)
+    getNextTicker = column.Cells(lastTickerRow + 1, 1).Value
 End Function
 
 Function getFirstRowOfTicker(ticker As String, column As Range)
@@ -215,15 +214,13 @@ Function getLastRowOfTicker(ticker As String, column As Range)
     Next i
 End Function
 
-Function getTotalVolume(ticker As String, column As Range, sheet As Worksheet)
+Function getTotalVolume(ticker As String, column As Range, sheet As Worksheet, lastTickerRow As Long)
     Dim firstRowOfTicker As Long
-    Dim lastRowOfTicker As Long
     Dim totalVolume As Double
     
     firstRowOfTicker = getFirstRowOfTicker(ticker, column)
-    lastRowOfTicker = getLastRowOfTicker(ticker, column)
     
-    For i = firstRowOfTicker To lastRowOfTicker
+    For i = firstRowOfTicker To lastTickerRow
         If (sheet.Cells(i, 7).Value > 0) Then
             totalVolume = totalVolume + sheet.Cells(i, 7).Value
         End If
@@ -232,13 +229,13 @@ Function getTotalVolume(ticker As String, column As Range, sheet As Worksheet)
     getTotalVolume = totalVolume
 End Function
 
-Function getYearlyChange(ticker As String, tickerColumn As Range, sheet As Worksheet)
+Function getYearlyChange(ticker As String, tickerColumn As Range, sheet As Worksheet, lastTickerRow As Long)
     Dim startingPrice As Double
     Dim endingPrice As Double
     
     
     startingPrice = getStartingPrice(ticker, tickerColumn, sheet)
-    endingPrice = getEndingPrice(ticker, tickerColumn, sheet)
+    endingPrice = getEndingPrice(ticker, tickerColumn, sheet, lastTickerRow)
     
     getYearlyChange = endingPrice - startingPrice
 End Function
@@ -250,10 +247,7 @@ Function getStartingPrice(ticker As String, tickerColumn As Range, sheet As Work
     getStartingPrice = sheet.Cells(firstTickerRow, 3).Value
 End Function
 
-Function getEndingPrice(ticker As String, tickerColumn As Range, sheet As Worksheet)
-    Dim lastTickerRow As Long
-    
-    lastTickerRow = getLastRowOfTicker(ticker, tickerColumn)
+Function getEndingPrice(ticker As String, tickerColumn As Range, sheet As Worksheet, lastTickerRow As Long)
     getEndingPrice = sheet.Cells(lastTickerRow, 6).Value
 End Function
 
