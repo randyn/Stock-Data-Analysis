@@ -101,7 +101,7 @@ Sub recordGreatestStatsLabels(sheet As Worksheet)
     sheet.Range("O3").Value = "Greatest % Decrease"
     sheet.Range("O4").Value = "Greatest total volume"
     sheet.Range("P1").Value = "Ticker"
-    sheet.Range("Q2").Value = "Value"
+    sheet.Range("Q1").Value = "Value"
 End Sub
 
 Function tickerIndexForMinStat(statColumn As Range)
